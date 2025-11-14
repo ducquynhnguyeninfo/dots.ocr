@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  dotsocr-api:
+    build:
+      context: ..
+      dockerfile: container/Dockerfile
+    image: dotsocr:latest
+    container_name: dotsocr-api-server
+    ports:
+      - "3803:3803"
+    volumes:
+      # Mount model weights directory (persistent storage)
+      - ./weights:/app/weights
+      # Mount data directory for input files
+      - ./data:/app/data
+      # Mount output directory for results
+      - ./output:/app/output
+      # Optional: Mount custom configuration
+      - ./config:/app/config:ro
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTHONPATH=/app
+      - HF_HOME=/app/cache/huggingface
+      - TRANSFORMERS_CACHE=/app/cache/transformers
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3803/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - dotsocr-network
+
+  # Optional: Add a monitoring service
+  gpu-monitor:
+    image: nvidia/cuda:12.9.0-runtime-ubuntu22.04
+    container_name: dotsocr-gpu-monitor
+    command: >
+      bash -c "apt-get update && apt-get install -y watch &&
+               watch -n 5 'nvidia-smi --query-gpu=timestamp,name,memory.used,memory.total,utilization.gpu,temperature.gpu --format=csv'"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - dotsocr-network
+    profiles:
+      - monitoring
+
+  # Optional: Redis for caching (if needed for scaling)
+  redis:
+    image: redis:7-alpine
+    container_name: dotsocr-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - dotsocr-network
+    profiles:
+      - caching
+
+networks:
+  dotsocr-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local
+
+# Development override file usage:
+# docker-compose -f docker-compose.yml -f docker-compose.dev.yml up

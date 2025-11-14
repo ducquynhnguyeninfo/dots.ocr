@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  dotsocr-api:
+    # Override for development
+    build:
+      target: development
+    volumes:
+      # Mount source code for hot reloading
+      - ..:/app
+      # Override entrypoint for development
+    environment:
+      - DEBUG=1
+      - RELOAD=1
+    command: >
+      bash -c "python3 -m pip install --no-cache-dir -e . &&
+               python3 demo/api_server.py --host 0.0.0.0 --port 3803 --workers 1 --reload"
+    ports:
+      - "3803:3803"
+      - "8000:8000"  # Additional port for debugging
+
+  # Enable monitoring by default in development
+  gpu-monitor:
+    profiles: []  # Remove profiles to enable by default
+
+  # Enable Redis by default in development
+  redis:
+    profiles: []  # Remove profiles to enable by default

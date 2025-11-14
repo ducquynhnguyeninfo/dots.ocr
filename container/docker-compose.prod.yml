@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  dotsocr-api:
+    # Production optimizations
+    environment:
+      - WORKERS=2
+      - LOG_LEVEL=INFO
+      - PROMETHEUS_METRICS=1
+    deploy:
+      resources:
+        limits:
+          memory: 16G
+        reservations:
+          memory: 8G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    # Production command with multiple workers
+    command: >
+      python3 demo/api_server.py 
+      --host 0.0.0.0 
+      --port 3803 
+      --workers 2
+      --log-level info
+    healthcheck:
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+
+  # Production load balancer (nginx proxy)
+  nginx:
+    image: nginx:alpine
+    container_name: dotsocr-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - dotsocr-api
+    restart: unless-stopped
+    networks:
+      - dotsocr-network
+
+  # Enable Redis for production caching
+  redis:
+    profiles: []
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
