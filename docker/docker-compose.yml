@@ -1,22 +1,28 @@
-version: '3.8'
+name: dotsocr1124
 
 services:
   dots-ocr-server:
-    image: dots-ocr:latest
-    container_name: dots-ocr-container
+    image: dots-ocr:dev1124
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dots-ocr-container1124
     ports:
       - "8000:8000"
     volumes:
       #download model to local，model url：https://www.modelscope.cn/models/rednote-hilab/dots.ocr
-      - ./model/dots.ocr:/workspace/weights/DotsOCR
+      # do mind where your current execute folder
+      - ../weights/DotsOCR:/workspace/weights/DotsOCR
     environment:
       - PYTHONPATH=/workspace/weights:$PYTHONPATH
+      - CUDA_DEVICE_ORDER=PCI_BUS_ID
+      - CUDA_VISIBLE_DEVICES=0
     deploy:
       resources:
         reservations:
           devices:
-            - capabilities: [gpu]
-              device_ids: ['0']
+            - capabilities: [ gpu ]
+              device_ids: [ '0' ]
     entrypoint: /bin/bash
     command:
       - -c
@@ -38,7 +44,3 @@ services:
             --chat-template-content-format string \
             --served-model-name dotsocr-model \
             --trust-remote-code
-
-
-
-
