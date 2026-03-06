@@ -8,6 +8,11 @@ import gc
 from dots_ocr import DotsOCRParser
 from dots_ocr.utils.consts import image_extensions
 
+# Force CUDA to use PCI bus ordering (same as nvidia-smi)
+os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
+
+# Now select GPU 0 (which will match nvidia-smi GPU 0 = RTX 5060 Ti 16GB)
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 def iter_inputs(input_dir: Path):
     for p in sorted(input_dir.iterdir()):
@@ -125,12 +130,12 @@ def main():
 
 def main_working_dirs():
     working_dirs = [
-        # {'name': '10/1', 'input_dir': '/home/quynhnguyen/dotsocr/dots.ocr/data/10/1', 'output_dir': '/home/quynhnguyen/dotsocr/dots.ocr/output/10/1'},
-        # {'name': '10/2', 'input_dir': '/home/quynhnguyen/dotsocr/dots.ocr/data/10/2', 'output_dir': '/home/quynhnguyen/dotsocr/dots.ocr/output/10/2'},
-        {'name': '11/1', 'input_dir': '/home/quynhnguyen/dotsocr/dots.ocr/data/11/1', 'output_dir': '/home/quynhnguyen/dotsocr/dots.ocr/output/11/1'},
-        # {'name': '11/2', 'input_dir': '/home/quynhnguyen/dotsocr/dots.ocr/data/11/2', 'output_dir': '/home/quynhnguyen/dotsocr/dots.ocr/output/11/2'},
-        # {'name': '12/1', 'input_dir': '/home/quynhnguyen/dotsocr/dots.ocr/data/12/1', 'output_dir': '/home/quynhnguyen/dotsocr/dots.ocr/output/12/1'},
-        # {'name': '12/2', 'input_dir': '/home/quynhnguyen/dotsocr/dots.ocr/data/12/2', 'output_dir': '/home/quynhnguyen/dotsocr/dots.ocr/output/12/2'}
+        # {'name': '10/1', 'input_dir': '/home/ndquynh/workspace/raw/splitted-books/ngu-van-kn-10/1/', 'output_dir': './output_v1.5/10/1'},
+        # {'name': '10/2', 'input_dir': '/home/ndquynh/workspace/raw/splitted-books/ngu-van-kn-10/2/', 'output_dir': './output_v1.5/10/2'},
+        {'name': '11/1', 'input_dir': '/home/ndquynh/workspace/raw/splitted-books/ngu-van-kn-11/1/', 'output_dir': './output_v1.5/11/1'},
+        # {'name': '11/2', 'input_dir': '/home/ndquynh/workspace/raw/splitted-books/ngu-van-kn-11/2/', 'output_dir': './output_v1.5/11/2'},
+        # {'name': '12/1', 'input_dir': '/home/ndquynh/workspace/raw/splitted-books/ngu-van-kn-12/1/', 'output_dir': './output_v1.5/12/1'},
+        # {'name': '12/2', 'input_dir': '/home/ndquynh/workspace/raw/splitted-books/ngu-van-kn-12/2/', 'output_dir': './output_v1.5/12/2'}
     ]
 
     for working_dir in working_dirs:
